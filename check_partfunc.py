@@ -4,6 +4,8 @@ import astropy.units as u
 import astropy.constants as c
 import astropy.io as io
 from astropy.table import Column
+import pylab as pl
+pl.ion()
 
 names = ['freq', 'freq_err', 'logI', 'df', 'El_cm',
          'gu', 'tag', 'qncode', 'qn', 'specname']
@@ -28,8 +30,7 @@ def compute_qpart(table, T):
     q = 1
     for row in table:
         q += row['gu']*np.exp(-row['Eu_cm']*(1/u.cm)*c.h*c.c/(c.k_B*T*u.K))
-        # print row['gu'], np.exp(-row['Eu_cm']*(1/u.cm)*c.h*c.c/(c.k_B*T*u.K))
-    return q
+    return np.log10(q)
 
 
 def get_qpart(tag):
@@ -41,8 +42,6 @@ def get_qpart(tag):
         names = ['tag', 'molecule', '#lines', '1000', '500', '300',
                  '225', '150', '75', '37.5', '18.75', '9.375', '5.000',
                  '2.725']
-        print col_starts
-        print col_ends
         tb_qpart = io.ascii.read(
             'partfunc/{}.part'.format(db),
             format='fixed_width_no_header',
@@ -60,12 +59,26 @@ def get_qpart(tag):
         print "Check tag value"
     return tb_qpart[tb_qpart['tag'] == tag]
 
+def plot():
+    """"""
+    temps = np.linspace(0,1000,10000)
+    qval = compute_qpart(tb, temps)
+    tb_qpart = get_qpart(tag)
+    pl.figure(1)
+    pl.clf()
+    pl.plot(temps,qval)
+    for key in tb_qpart.keys()[3:]:
+        pl.scatter(key, tb_qpart[key])
+    pl.xscale('linear')
+    pl.xlim([0,20])
+    return qval
 
 if __name__ == '__main__':
     tag = 28503
     T = 9.375
     tb = load_spec(tag)
-    tb.pprint()
+    # tb.pprint()
     qval = compute_qpart(tb, T)
-    tb_qpart = get_qpart_approx(tag)
-    print tb_qpart
+    tb_qpart = get_qpart(tag)
+    print plot()
+    
