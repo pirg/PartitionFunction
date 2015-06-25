@@ -32,12 +32,40 @@ def compute_qpart(table, T):
     return q
 
 
+def get_qpart(tag):
+    """"""
+    if str(tag)[-3:-2] == '5':
+        db = 'cdms'
+        col_starts = [0, 7, 31, 45]+[45+13*(i+1) for i in range(10)]
+        col_ends = [i-1 for i in col_starts[1:]] + [1000]
+        names = ['tag', 'molecule', '#lines', '1000', '500', '300',
+                 '225', '150', '75', '37.5', '18.75', '9.375', '5.000',
+                 '2.725']
+        print col_starts
+        print col_ends
+        tb_qpart = io.ascii.read(
+            'partfunc/{}.part'.format(db),
+            format='fixed_width_no_header',
+            guess=False,
+            col_starts=col_starts,
+            col_ends=col_ends,
+            data_start=2,
+            comment='=',
+            delimiter=' ',
+            fill_values=('---'),
+            names=names)
+    elif str(tag)[-3:-2] == '0':
+        db = 'jpl'
+    else:
+        print "Check tag value"
+    return tb_qpart[tb_qpart['tag'] == tag]
+
 
 if __name__ == '__main__':
     tag = 28503
     T = 9.375
     tb = load_spec(tag)
     tb.pprint()
-    qval = compute_qpart(tb,T)
-    compute_qpart_approx(tag,T)
-    print qval
+    qval = compute_qpart(tb, T)
+    tb_qpart = get_qpart_approx(tag)
+    print tb_qpart
